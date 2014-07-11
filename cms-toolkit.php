@@ -31,6 +31,11 @@ function cfpb_build_plugin() {
 	require_once( CFPB_INC . 'taxonomies.php');
 	define( 'DEPENDENCIES_READY', true);
 	add_action('admin_enqueue_scripts', 'cfpb_cms_toolkit_scripts');
+	if ( defined('WP_CLI') && WP_CLI ) {
+		include __DIR__ . '/cli/library.php';
+		include __DIR__ . '/cli/migrate.php';
+		include __DIR__ . '/cli/randomize.php';
+	}
 }
 $general_error = new \WP_Error(
 	'_general_toolkit_error',
