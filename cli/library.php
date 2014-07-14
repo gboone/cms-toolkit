@@ -1,6 +1,6 @@
 <?php
 namespace CFPB;
-class CLI_Common extends \WP_CLI_COMMAND {
+class CLI_Common extends \WP_CLI_Command {
 
 	protected function get_specified_posts($assoc_args) {
         $args = array('posts_per_page' => -1);

@@ -31,7 +31,7 @@ class Migrate_Command extends CLI_Common {
     * 
     **/
     public function taxonomy( $args, $assoc_args ) {
-        if ( empty($args) ) {
+        if ( count($args) < 2 ) {
             exit('Invalid entry.');
         }
         $from = $args[0];
@@ -121,4 +121,3 @@ class Migrate_Command extends CLI_Common {
     }
 }
 
-\WP_CLI::add_command( 'migrate', '\CFPB\Migrate_Command' );

@@ -484,7 +484,7 @@ class ValidationTest extends PHPUnit_Framework_TestCase {
 	 * Tests whether a field with do_not_validate in the key will continue to 
 	 * validate. Expects `validate` to return.
 	 *
-	 * @group wip
+	 * @group stable
 	 * @group isolated
 	 * @group negative
 	 * @group validation

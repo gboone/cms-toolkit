@@ -32,9 +32,11 @@ function cfpb_build_plugin() {
 	define( 'DEPENDENCIES_READY', true);
 	add_action('admin_enqueue_scripts', 'cfpb_cms_toolkit_scripts');
 	if ( defined('WP_CLI') && WP_CLI ) {
-		include __DIR__ . '/cli/library.php';
-		include __DIR__ . '/cli/migrate.php';
-		include __DIR__ . '/cli/randomize.php';
+		require_once( __DIR__ . '/cli/library.php' );
+		require_once( __DIR__ . '/cli/migrate.php' );
+		\WP_CLI::add_command( 'migrate', '\CFPB\Migrate_Command' );
+		require_once( __DIR__ . '/cli/randomize.php' );
+		\WP_CLI::add_command( 'randomize', '\CFPB\Randomize_Command' );
 	}
 }
 $general_error = new \WP_Error(
