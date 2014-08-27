@@ -173,7 +173,6 @@ public function validate_link( $field, $post_id ) {
 
             $meta_key = $key;
         } else {
-            error_log("Skipping field {$i} of {$count}", 0);
             continue;
         }
     }
@@ -283,9 +282,13 @@ public function validate_date($field, $post_id) {
  */
 public function validate( $post_ID, $field ) {
     // $data = array_intersect_key($_POST, $this->fields);
-    $key = $field['meta_key'];
-    $value = $_POST[$key];
-    // error_log('Key is '. $key . ' value is ' . $value);
+    if ( array_key_exists( 'meta_key', $field ) ) {
+        $key = $field['meta_key'];
+    } elseif ( array_key_exists( $field['taxonomy'], $field ) ) {
+        $key = $field['taxonomy'];
+    } else {
+        return null;
+    }
     if ( array_key_exists('do_not_validate', $field) ) {
         return;
     }
@@ -293,28 +296,38 @@ public function validate( $post_ID, $field ) {
         return;
     }
 
+
     /* if this field is a taxonomy select, date, link or select field, we
        send it out to another validator
     */
     if ( $field['type'] == 'taxonomyselect') {
         $this->validate_taxonomyselect( $field, $post_ID );
+        return;
     } elseif ( in_array( $field['type'], $this->selects ) ) {
         $this->validate_select( $field, $post_ID );
+        return;
     } elseif ( $field['type'] === 'date' ) {
         $this->validate_date( $field, $post_ID );
+        return;
     } elseif ( $field['type'] === 'link' ) {
         $this->validate_link($field, $post_ID);
+        return;
     } else {
         /* 
             For most field types we just need to make sure we have the data
             we expect from the form and sanitize them before sending them to
             save
         */
-        $key = $field['slug'];
+            if ( ! array_key_exists( $key, $_POST ) ) {
+                return;
+            }
+            $value = $_POST[$key];
             if ( $field['type'] === 'number' ) {
                 if ( is_numeric( $value ) ) {
                     // if we're expecting a number, make sure we get a number
                     $postvalues = intval( $value ); 
+                } else {
+                    $postvalues = null;
                 }
             } elseif ( $field['type'] === 'url' && isset( $value ) ) {
                 // if we're expecting a url, make sure we get a url
@@ -325,7 +338,6 @@ public function validate( $post_ID, $field ) {
             } elseif ( ! empty( $value ) && ! is_array($value)) {
                 // make sure whatever we get for anything else is a string
                 $postvalues = (string)$value;
-                // error_log('Post data ' . $value . '  cleaned for ' . $key);
             } else {
                 $postvalues = null;
             }
@@ -353,7 +365,6 @@ public function save( $post_ID, $postvalues ) {
 
     // save post data for any fields that sent them
     foreach ( $postvalues as $key => $value ) {
-        error_log("Key is {$key} and value is {$value}.");
         $existing = get_post_meta( $post_ID, $key, $single = true );
         if ( $value == null && isset($existing) ) {
             delete_post_meta($post_ID, $key);
@@ -378,7 +389,6 @@ public function validate_and_save( $post_ID ) {
             foreach ( $field['fields'] as $f ) {
                 $f['meta_key'] = $field['meta_key'] . '_' . $f['meta_key'];
                 $value = $this->validate( $post_ID, $f );
-                error_log('Saving ' . $value. ' to ' . $f['meta_key']);
                 $validate[$f['meta_key']] = $value;
             }
         } else {
