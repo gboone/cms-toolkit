@@ -1,4 +1,5 @@
-function clear_link_manager(id) {
+function clear_link_manager(id) 
+{
     var inputs = jQuery('ol#link_manager > li input.' + id);
     var urlInputs = jQuery('ol#link_manager > li input.' + id + '[type=url]');
     var textInputs = jQuery('ol#link_manager > li input.' + id + '[type=text]');
@@ -16,21 +17,22 @@ function clear_link_manager(id) {
     span.remove();
 }
 
-function toggle_link_field(element) {
+function toggle_link_field(element) 
+{
     var classes = jQuery(element).attr('class').split(/\s+/);
     var form_num = classes[3];
     var action = classes[2];
     var slug = classes[1];
-    if ( action == 'edit') {
-        var targeted_input = jQuery('div#'+slug+' fieldset#' + slug + '_' + form_num );
+    if (action == 'edit') {
+        var targeted_input = jQuery('div#'+slug+' fieldset#' + slug + '_' + form_num);
         jQuery('div.' + slug + ' span.' + form_num).toggle();
-    } else if ( action == 'add' ) {
+    } else if (action == 'add' ) {
         var targeted_input = jQuery('div.' + slug + ' fieldset.hidden.new').first();
         jQuery(targeted_input).toggleClass('new');
         jQuery(targeted_input).toggleClass('expanded');
         jQuery(targeted_input).attr('disabled', false);
-    } else if ( action == 'remove' ) {
-        var targeted_input = jQuery('div.' + slug + ' fieldset.expanded' ).first();
+    } else if (action == 'remove' ) {
+        var targeted_input = jQuery('div.' + slug + ' fieldset.expanded').first();
         jQuery(targeted_input).toggleClass('expanded');
         jQuery(targeted_input).toggleClass('new');
     }
@@ -39,13 +41,19 @@ function toggle_link_field(element) {
     var remaining_fields = jQuery('div.' + slug + ' fieldset.new').length;
 }
 
-jQuery('a.toggle_link_manager').click( function() {
-    toggle_link_field(this);
-});
+jQuery('a.toggle_link_manager').click(
+    function () {
+            toggle_link_field(this);
+    }
+);
 
-jQuery(document).ready(function($){
-    $('select.multiple').multiSelect({
-        selectableHeader: "<label>Click a post name to select it.</label>",
-        selectionHeader: "<label>Click a post name to remove it.</label>",
-    });
-} );
+jQuery(document).ready(
+    function ($) {
+        $('select.multiple').multiSelect(
+            {
+                selectableHeader: "<label>Click a post name to select it.</label>",
+                selectionHeader: "<label>Click a post name to remove it.</label>",
+            }
+        );
+    } 
+);
