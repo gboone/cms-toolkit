@@ -187,80 +187,72 @@ if (isset($field['title']) ) {?>
      *
      * @since 1.0
      **/
-    protected function single_input( $slug, $type, $max_length = null, $value = null, $placeholder = null, $title = null, $label = null, $fieldset = false ) 
+    protected function single_input( $slug, $type, $max_length = null, $value = null, $placeholder = null, $title = null, $label = null, $fieldset = false )
     {
-        $value       = 'value="'. $value . '"';
-        $max_length  = 'maxlength="'. $max_length . '"';
-        $placeholder = 'placeholder="' . $placeholder . '"';
-        ?><label><?php echo $label ?></label>
-                <input id="<?php echo esc_attr($slug) ?>" class="cms-toolkit-input" name="<?php echo esc_attr($slug) ?>" type="<?php echo esc_attr($type) ?>" <?php echo " $max_length $value $placeholder" ?> />
-        <?php if ($title != null ) : ?>
-                <p class="howto"><?php echo $title ?></p><?php
+        ?><label><?php echo esc_html( $label ); ?></label>
+                <input id="<?php echo esc_attr( $slug ); ?>" class="cms-toolkit-input" name="<?php echo esc_attr( $slug ); ?>" type="<?php echo esc_attr( $type ); ?>" maxlength="<?php echo absint( $max_length ); ?>" value="<?php echo esc_attr( $value ); ?>" placeholder="<?php echo esc_attr( $placeholder ); ?>" />
+        <?php if ( null !== $title ) : ?>
+                <p class="howto"><?php echo esc_html( $title ); ?></p><?php
         endif;
     }
 
-    protected function boolean_input( $slug, $label, $value, $fieldset = false ) 
+    protected function boolean_input( $slug, $label, $value, $fieldset = false )
     {
-        $name = 'name="' . esc_attr($slug) . '"';
-        $id = 'id="'. esc_attr($slug) . '"';
     ?>
      <p>
-      <input <?php echo $id . ' ' . $name ?> type="checkbox" <?php if ($value == 'on') { echo ' checked'; 
-     } ?> />
-      <label for="<?php echo esc_attr($slug) ?>"><?php echo $label ?></label>
+      <input id="<?php echo esc_attr( $slug ); ?>" name="<?php echo esc_attr( $slug ); ?>" type="checkbox" <?php checked( $value, 'on' ); ?> />
+      <label for="<?php echo esc_attr( $slug ); ?>"><?php echo esc_html( $label ); ?></label>
      </p>
     <?php
     }
 
-    protected function url_input( $slug, $init_num_forms, $max_num_forms, $max_length = null, $value = null ) 
+    protected function url_input( $slug, $init_num_forms, $max_num_forms, $max_length = null, $value = null )
     {
         global $post;
-        $post_id = $post->ID;
-        $value = "value='{$value}'";
-        $max_length = "max_length='{$max_length}'";
+        $post_id        = $post->ID;
         $existing_terms = array();
-        for ( $i = 0; $i <= $max_num_forms; $i++ ):
-            $existing = get_post_meta($post_id, "{$slug}_{$i}", $single = false);
-            if (! empty($existing) ) {
-                array_push($existing_terms, $existing);
+        for ( $i = 0; $i <= $max_num_forms; $i++ ) {
+            $existing = get_post_meta( $post_id, "{$slug}_{$i}", false );
+            if ( ! empty( $existing ) ) {
+                $existing_terms[] = $existing;
             }
-        endfor;
-        $count = count($existing_terms) > $init_num_forms ? count($existing_terms) : $init_num_forms;
+        }
+        $count = count( $existing_terms ) > $init_num_forms ? count( $existing_terms ) : $init_num_forms;
         ?>
-     <div class='link_manager <?php echo "{$slug} max_{$max_num_forms}" ?>'>
+     <div class='link_manager <?php echo esc_attr( $slug ) . ' max_' . absint( $max_num_forms ); ?>'>
         <?php
-        for ( $i = 0; $i < $count; $i++ ):
-            $existing = get_post_meta($post_id, $slug . "_{$i}", false);
-            if (! isset($existing[0]) || ! isset($existing[1]) ) : ?>
+        for ( $i = 0; $i < $count; $i++ ) :
+            $existing = get_post_meta( $post_id, $slug . "_{$i}", false );
+            if ( ! isset( $existing[0] ) || ! isset( $existing[1] ) ) : ?>
               <fieldset>
-               <label for='<?php echo esc_attr($slug) . '_text_' . $i ?>'>Link text</label>
-               <input class='<?php echo esc_attr($slug) . '_text_' . $i ?> cms-toolkit-input' name="<?php echo esc_attr($slug) . '_text_' . $i ?>" type="text" <?php echo " $max_length $value" ?> />
-               <label for='<?php echo esc_attr($slug) . '_url_' . $i ?>'>Link URL</label>
-               <input class='<?php echo esc_attr($slug) . '_url_' . $i ?> cms-toolkit-input' name='<?php echo esc_attr($slug) ?>_url_<?php echo $i ?>' type="url" <?php echo " $max_length $value" ?> />
+               <label for="<?php echo esc_attr( $slug . '_text_' . $i ); ?>">Link text</label>
+               <input class="<?php echo esc_attr( $slug . '_text_' . $i ); ?> cms-toolkit-input" name="<?php echo esc_attr( $slug . '_text_' . $i ); ?>" type="text" maxlength="<?php echo absint( $max_length ); ?>" value="" />
+               <label for="<?php echo esc_attr( $slug . '_url_' . $i ); ?>">Link URL</label>
+               <input class="<?php echo esc_attr( $slug . '_url_' . $i ); ?> cms-toolkit-input" name="<?php echo esc_attr( $slug . '_url_' . $i ); ?>" type="url" maxlength="<?php echo absint( $max_length ); ?>" value="" />
               </fieldset>
-            <?php else:?>
-                    <p><span class="<?php echo $i ?>">Link text: <?php echo $existing[1] ?><br />Link URL: <?php echo $existing[0] ?>.<br /><a href="#related_links" title='<?php esc_attr($slug) ?>' class="toggle_link_manager <?php echo "{$slug} edit {$i}"  ?>" >Edit</a></span></p>
-                        <fieldset id='<?php echo "{$slug}_{$i}" ?>' class='hidden'>
-                            <label class='<?php echo $i ?>' for='<?php echo esc_attr($slug) . '_text_' . $i ?>'>Link text</label>
-                            <input class='<?php echo $i ?>' id='<?php echo esc_attr($slug) . '_text_' . $i ?>' class="cms-toolkit-input" name="<?php echo esc_attr($slug) . '_text_' . $i ?>" type="text" <?php echo " $max_length value='{$existing[1]}'" ?> />
-                            <label class='<?php echo $i ?>' for='<?php echo esc_attr($slug) . '_url_' . $i ?>'>Link URL</label>
-                            <input class='<?php echo $i ?>' id='<?php echo esc_attr($slug) . '_url_' . $i ?>' class="cms-toolkit-input" name='<?php echo esc_attr($slug) ?>_url_<?php echo $i ?>' type="url" <?php echo " $max_length value='{$existing[0]}'" ?> />
-                            <a href="#related_links" title='<?php esc_attr($slug) ?>' class="toggle_link_manager <?php echo "{$slug} edit {$i}"  ?>" >Undo</a>
+            <?php else : ?>
+                    <p><span class="<?php echo absint( $i ); ?>">Link text: <?php echo esc_html( $existing[1] ); ?><br />Link URL: <?php echo esc_url( $existing[0] ); ?>.<br /><a href="#related_links" title="<?php echo esc_attr( $slug ); ?>" class="toggle_link_manager <?php echo esc_attr( "{$slug} edit {$i}" ); ?>" >Edit</a></span></p>
+                        <fieldset id="<?php echo esc_attr( "{$slug}_{$i}" ); ?>" class="hidden">
+                            <label class="<?php echo absint( $i ); ?>" for="<?php echo esc_attr( $slug . '_text_' . $i ); ?>">Link text</label>
+                            <input class="<?php echo absint( $i ); ?>" id="<?php echo esc_attr( $slug . '_text_' . $i ); ?>" class="cms-toolkit-input" name="<?php echo esc_attr( $slug . '_text_' . $i ); ?>" type="text" maxlength="<?php echo absint( $max_length ); ?>" value="<?php echo esc_attr( $existing[1] ); ?>" />
+                            <label class="<?php echo absint( $i ); ?>" for="<?php echo esc_attr( $slug . '_url_' . $i ); ?>">Link URL</label>
+                            <input class="<?php echo absint( $i ); ?>" id="<?php echo esc_attr( $slug . '_url_' . $i ); ?>" class="cms-toolkit-input" name="<?php echo esc_attr( $slug . '_url_' . $i ); ?>" type="url" maxlength="<?php echo absint( $max_length ); ?>" value="<?php echo esc_url( $existing[0] ); ?>" />
+                            <a href="#related_links" title="<?php echo esc_attr( $slug ); ?>" class="toggle_link_manager <?php echo esc_attr( "{$slug} edit {$i}" ); ?>" >Undo</a>
                             <span class="howto">Save the post to update this field, click undo to keep what you had (above).</span>
                         </fieldset>
-            <?php endif;?>
+            <?php endif; ?>
         <?php endfor;
-        for ( $i = $count; $i <= $max_num_forms; $i++ ): ?>
-          <fieldset disabled id="<?php echo "{$slug}_{$i}" ?>" class="hidden new">
-           <label class='<?php echo $i ?>' for='<?php echo esc_attr($slug) . '_text_' . $i ?>'>Link text</label>
-           <input class='<?php echo $i ?>' id='<?php echo esc_attr($slug) . '_text_' . $i ?>' class="cms-toolkit-input" name="<?php echo esc_attr($slug) . '_text_' . $i ?>" type="text" <?php echo " $max_length value=''" ?> />
-           <label class='<?php echo $i ?>' for='<?php echo esc_attr($slug) . '_url_' . $i ?>'>Link URL</label>
-           <input class='<?php echo $i ?>' id='<?php echo esc_attr($slug) . '_url_' . $i ?>' class="cms-toolkit-input" name='<?php echo esc_attr($slug) ?>_url_<?php echo $i ?>' type="url" <?php echo " $max_length value=''" ?> />
-           <a href="#related_links" title='<?php esc_attr($slug) ?>' class="toggle_link_manager <?php echo "{$slug} remove {$i}"  ?>" >Remove</a>
+        for ( $i = $count; $i <= $max_num_forms; $i++ ) : ?>
+          <fieldset disabled id="<?php echo esc_attr( "{$slug}_{$i}" ); ?>" class="hidden new">
+           <label class="<?php echo absint( $i ); ?>" for="<?php echo esc_attr( $slug . '_text_' . $i ); ?>">Link text</label>
+           <input class="<?php echo absint( $i ); ?>" id="<?php echo esc_attr( $slug . '_text_' . $i ); ?>" class="cms-toolkit-input" name="<?php echo esc_attr( $slug . '_text_' . $i ); ?>" type="text" maxlength="<?php echo absint( $max_length ); ?>" value="" />
+           <label class="<?php echo absint( $i ); ?>" for="<?php echo esc_attr( $slug . '_url_' . $i ); ?>">Link URL</label>
+           <input class="<?php echo absint( $i ); ?>" id="<?php echo esc_attr( $slug . '_url_' . $i ); ?>" class="cms-toolkit-input" name="<?php echo esc_attr( $slug . '_url_' . $i ); ?>" type="url" maxlength="<?php echo absint( $max_length ); ?>" value="" />
+           <a href="#related_links" title="<?php echo esc_attr( $slug ); ?>" class="toggle_link_manager <?php echo esc_attr( "{$slug} remove {$i}" ); ?>" >Remove</a>
           </fieldset>
-        <?php endfor; 
-        if ($count <= $max_num_forms ) : ?>
-         <a class='toggle_link_manager <?php echo "{$slug} add"?>' href="#related_links" >Add a link</a>
+        <?php endfor;
+        if ( $count <= $max_num_forms ) : ?>
+         <a class="toggle_link_manager <?php echo esc_attr( "{$slug} add" ); ?>" href="#related_links" >Add a link</a>
         <?php endif; ?>
     </div>
     <?php
@@ -313,8 +305,9 @@ if (isset($field['title']) ) {?>
             wp_dropdown_categories('taxonomy=' . $taxonomy . '&hide_empty=0&orderby=name&name=' . $taxonomy . '&show_option_none=Select ' . $taxonomy . '&selected='. array_pop($IDs));
      else :    // otherwise use all the values set in $param to generate the option
             $multiple = isset($multi) ? 'multiple' : null;
-        ?> 
-       <label for="<?php echo esc_attr($slug) ?>"><select id="<?php echo esc_attr($slug) ?>" name="<?php echo esc_attr($slug) ?>[]" <?php echo $multiple ?>></label>
+        ?>
+       <label for="<?php echo esc_attr( $slug ); ?>"></label>
+       <select id="<?php echo esc_attr( $slug ); ?>" name="<?php echo esc_attr( $slug ); ?>[]" <?php echo esc_attr( $multiple ); ?>>
                 <?php
                 if (empty($value) ) : ?>
                     <option selected value=""><?php echo esc_html($placeholder) ?></option>
@@ -332,27 +325,23 @@ if (isset($field['title']) ) {?>
      endif;
     }
 
-    protected function post_select( $slug, $posts, $value, $multi, $placeholder = '--' ) 
-    { 
-        global $post;
-        $selected = null;?>
-      <label for="<?php echo esc_attr($slug) ?>"><select class="<?php echo esc_attr($multi)?>" id="<?php echo esc_attr($slug) ?>" name="<?php echo esc_attr($slug) ?>[]" <?php echo $multi; ?> ></label>
-        <?php if ($multi == null ) :
-            if (empty($value)  ) : ?>
-             <option value='' selected>-- Nothing selected --</option>
-            <?php else: ?>
-                    <option value=''>-- Nothing selected --</option>
-            <?php endif; 
+    protected function post_select( $slug, $posts, $value, $multi, $placeholder = '--' )
+    {
+        $selected = null; ?>
+      <label for="<?php echo esc_attr( $slug ); ?>"></label>
+      <select class="<?php echo esc_attr( $multi ); ?>" id="<?php echo esc_attr( $slug ); ?>" name="<?php echo esc_attr( $slug ); ?>[]" <?php echo esc_attr( $multi ); ?>>
+        <?php if ( null === $multi ) :
+            if ( empty( $value ) ) : ?>
+             <option value="" selected>-- Nothing selected --</option>
+            <?php else : ?>
+                    <option value="">-- Nothing selected --</option>
+            <?php endif;
         endif; ?>
-        <?php foreach ( $posts as $p ):
-            if (in_array($p->post_name, (array)$value) ) :
-                $selected = "selected";
-                    else:
-                        $selected = null;
-                    endif;?>
-                    <option <?php echo $selected ?> value="<?php echo esc_attr($p->post_name)?>"><?php echo $p->post_title; ?></option>
+        <?php foreach ( $posts as $p ) :
+            $selected = in_array( $p->post_name, (array) $value, true ) ? 'selected' : null; ?>
+                    <option <?php echo esc_attr( $selected ); ?> value="<?php echo esc_attr( $p->post_name ); ?>"><?php echo esc_html( $p->post_title ); ?></option>
         <?php endforeach; ?>
-      </select>            
+      </select>
         <?php
     }
 
@@ -395,11 +384,11 @@ if (isset($field['title']) ) {?>
      * @param str  $tax_nice_name the name of the target taxonomy (i.e. Input Date)
      * @param bool $multiples     whether the term shoud append (true) or replace (false) existing terms
      **/
-    protected function date( $taxonomy, $tax_nice_name, $mutliples = false ) 
+    protected function date( $taxonomy, $tax_nice_name, $multiples = false )
     {
 ?>
         <?php
-        $tax_name = stripslashes($taxonomy);
+        $tax_name = $taxonomy;
         global $post, $wp_locale;
 
         $month = null;
@@ -415,7 +404,7 @@ if (isset($field['title']) ) {?>
         <input id="<?php echo esc_attr($tax_name) ?>_day" type="text" name="<?php echo esc_attr($tax_name) ?>_day" value="<?php echo esc_attr($day) ?>" size="2" maxlength="2" placeholder="DD"/>
         <input id="<?php echo esc_attr($tax_name) ?>_year" type="text" name="<?php echo esc_attr($tax_name) ?>_year" value="<?php echo esc_attr($year) ?>" size="4" maxlength="4" placeholder="YYYY"/>
         <?php
-        if ($multiples = false ) { ?>
+        if ( false === $multiples ) { ?>
             <p class="howto">If one is set already, selecting a new month, day and year will override it.</p>
         <?php } else { ?>
           <p class='howto'>Select a month, day and year to add another <?php echo sanitize_text_field($tax_nice_name) ?></p>
@@ -423,15 +412,15 @@ if (isset($field['title']) ) {?>
 
         <div class='tagchecklist'>
         <?php
-        if (has_term('', $taxonomy, $post->id) ) {
-            $terms = get_the_terms($post->id, $tax_name);
+        if ( has_term( '', $taxonomy, $post->ID ) ) {
+            $terms = get_the_terms( $post->ID, $tax_name );
             $i     = 0;
             foreach ( $terms as $term ) {
                 // Checks if the current set term is wholly numeric (in this case a timestamp)
-                if (is_numeric($term->name) ) {
-                    $natdate = date('j F, Y', intval($term->name));
+                if ( is_numeric( $term->name ) ) {
+                    $natdate = wp_date( 'j F, Y', intval( $term->name ) );
             ?>
-              <span><a id='<?php echo sanitize_text_field($taxonomy) ?>-check-num-<?php echo sanitize_text_field($i) ?>' class='ntdelbutton <?php echo sanitize_text_field($term->name) ?>'><?php echo sanitize_text_field($term->name) ?></a><?php echo $natdate ?></span>
+              <span><a id='<?php echo esc_attr( $taxonomy . '-check-num-' . $i ); ?>' class='ntdelbutton <?php echo esc_attr( $term->name ); ?>'><?php echo esc_html( $term->name ); ?></a><?php echo esc_html( $natdate ); ?></span>
             <?php
                 } else {
                     $date = strtotime($term->name);                                     // If it isn't, convert it to a timestamp -- why? ?>

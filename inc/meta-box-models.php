@@ -114,9 +114,9 @@ class Models
     public function generate( ) 
     {
         $parts = array( 'normal', 'advanced', 'side', );
-        if (! in_array($this->context, $parts) ) {
-            $error = new $this->error('context', __('Invalid context: ' . $this->context));
-            echo $error->get_error_message('context');
+        if ( ! in_array( $this->context, $parts, true ) ) {
+            $error = new $this->error( 'context', 'Invalid context: ' . $this->context );
+            echo esc_html( $error->get_error_message( 'context' ) );
             return;
         }
 
@@ -124,19 +124,19 @@ class Models
         $post_types = $this->post_type;
         foreach ( $post_types as $p ) {
             $exists = $this->check_post_type($p);
-            if ($exists != false ) {
+            if ( false !== $exists ) {
                 add_meta_box(
-                    $id = $this->slug,
-                    $title = $this->title,
-                    $callback = array( $this->View, 'ready_and_print_html' ),
-                    $post_type = $p,
-                    $context = $this->context,
-                    $priority = $this->priority,
-                    $callback_args = $fields
+                    $this->slug,
+                    $this->title,
+                    array( $this->View, 'ready_and_print_html' ),
+                    $p,
+                    $this->context,
+                    $this->priority,
+                    $fields
                 );
             } else {
-                $error = new $this->error('post_type', 'Invalid post type: ' . $p);
-                echo $error->get_error_message('post_type');
+                $error = new $this->error( 'post_type', 'Invalid post type: ' . $p );
+                echo esc_html( $error->get_error_message( 'post_type' ) );
             }
         }
     }
@@ -160,26 +160,25 @@ class Models
             $count = 1;
         }
         for ( $i = 0; $i <= $count; $i++ ) {
-            if (array_key_exists("{$key}_url_{$i}", $_POST) AND array_key_exists("{$key}_text_{$i}", $_POST) ) {
-                $url = $_POST["{$key}_url_{$i}"];
-                $text = $_POST["{$key}_text_{$i}"];
+            if ( array_key_exists( "{$key}_url_{$i}", $_POST ) && array_key_exists( "{$key}_text_{$i}", $_POST ) ) {
+                $url  = esc_url_raw( wp_unslash( $_POST[ "{$key}_url_{$i}" ] ) );
+                $text = sanitize_text_field( wp_unslash( $_POST[ "{$key}_text_{$i}" ] ) );
                 $full_link = array( 0 => $url, 1 => $text );
                 $meta_key = $key . "_{$i}";
-                $existing = get_post_meta($post_id, $meta_key, $single = false);
+                $existing = get_post_meta( $post_id, $meta_key, false );
 
-                if (empty($_POST[$key . '_url_' . $i]) || empty($_POST[$key.'_text_' . $i]) ) {
-                    delete_post_meta($post_id, $meta_key);
-                } elseif (empty($existing) ) {
-                    add_post_meta($post_id, $meta_key, $url, false);
-                    add_post_meta($post_id, $meta_key, $text, false);
-                } elseif ($existing != $full_link ) {
-                    update_post_meta($post_id, $meta_key, $url, $existing[0]);
-                    update_post_meta($post_id, $meta_key, $text, $existing[1]);
+                if ( empty( $_POST[ $key . '_url_' . $i ] ) || empty( $_POST[ $key . '_text_' . $i ] ) ) {
+                    delete_post_meta( $post_id, $meta_key );
+                } elseif ( empty( $existing ) ) {
+                    add_post_meta( $post_id, $meta_key, $url, false );
+                    add_post_meta( $post_id, $meta_key, $text, false );
+                } elseif ( $existing !== $full_link ) {
+                    update_post_meta( $post_id, $meta_key, $url, $existing[0] );
+                    update_post_meta( $post_id, $meta_key, $text, $existing[1] );
                 }
 
                 $meta_key = $key;
             } else {
-                error_log("Skipping field {$i} of {$count}", 0);
                 continue;
             }
         }
@@ -199,52 +198,51 @@ class Models
     public function validate_select( $field, $post_id ) 
     {
         $key = $field['meta_key'];
-        if (!isset($_POST[$key]) ) {
-            delete_post_meta($post_id, $key);
+        if ( ! isset( $_POST[ $key ] ) ) {
+            delete_post_meta( $post_id, $key );
             return;
         }
-        if (array_key_exists($key, $_POST) ) {
-            $existing = get_post_meta($post_id, $key, false);
-            $data = $_POST[$key];
-            foreach ( (array)$data as $d ) {
-                // Adding or updating terms
-                $term = sanitize_text_field($d);
-                $e_key = array_search($term, $existing);
-                if (! in_array($d, (array)$existing) ) {
-                    // if the term is not in $existing, it's a new term, add it
+        if ( array_key_exists( $key, $_POST ) ) {
+            $existing = get_post_meta( $post_id, $key, false );
+            $data     = $_POST[ $key ];
+            foreach ( (array) $data as $d ) {
+                // Adding or updating terms.
+                $term = sanitize_text_field( wp_unslash( $d ) );
+                if ( ! in_array( $term, (array) $existing, true ) ) {
+                    // if the term is not in $existing, it's a new term, add it.
                     // we use add_post_meta instead of update so we can have more
-                    // than one value on the array
-                    add_post_meta($post_id, $key, $term);
+                    // than one value on the array.
+                    add_post_meta( $post_id, $key, $term );
                 }
             }
-            // delete terms if they're not in the $_POST data
-            foreach ( (array)$existing as $e ) {
-                if (! in_array($e, (array)$data) ) {
-                    delete_post_meta($post_id, $key, $meta_value = $e);
+            // Delete terms if they're not in the $_POST data.
+            foreach ( (array) $existing as $e ) {
+                if ( ! in_array( $e, (array) $data, true ) ) {
+                    delete_post_meta( $post_id, $key, $e );
                 }
             }
         }
     }
 
-    public function validate_taxonomyselect($field, $post_id) 
+    public function validate_taxonomyselect( $field, $post_id )
     {
         $key = $field['slug'];
-        if (isset($_POST[$key])) {
-            $term = sanitize_text_field($_POST[$key]);
-            $term_exists = get_term_by('id', $term, $field['taxonomy']);
-            if ($term_exists ) {
+        if ( isset( $_POST[ $key ] ) ) {
+            $term        = sanitize_text_field( wp_unslash( $_POST[ $key ] ) );
+            $term_exists = get_term_by( 'id', $term, $field['taxonomy'] );
+            if ( $term_exists ) {
                 wp_set_object_terms(
                     $post_id,
                     $term_exists->name,
                     $field['taxonomy'],
-                    $append = $field['multiple']
+                    $field['multiple']
                 );
             } else {
                 wp_set_object_terms(
                     $post_id,
                     $term,
                     $field['taxonomy'],
-                    $append = $field['multiple']
+                    $field['multiple']
                 );
             }
         }
@@ -258,24 +256,24 @@ class Models
      * @param  [type] $post_id The ID of the object to be manipulated
      * @return void
      */
-    public function validate_date($field, $post_id) 
+    public function validate_date( $field, $post_id )
     {
-        $year = $field['taxonomy'] . '_year';
+        $year  = $field['taxonomy'] . '_year';
         $month = $field['taxonomy'] . '_month';
-        $day = $field['taxonomy'] . '_day';
-        $data = array($field['taxonomy'] => '');
-        if (isset($_POST[$month]) ) {
-            $data[$field['taxonomy']] = $_POST[$month];
+        $day   = $field['taxonomy'] . '_day';
+        $data  = array( $field['taxonomy'] => '' );
+        if ( isset( $_POST[ $month ] ) ) {
+            $data[ $field['taxonomy'] ] = sanitize_text_field( wp_unslash( $_POST[ $month ] ) );
         }
-        if (isset($_POST[$day]) ) {
-            $data[$field['taxonomy']] .= ' ' . $_POST[$day];
+        if ( isset( $_POST[ $day ] ) ) {
+            $data[ $field['taxonomy'] ] .= ' ' . sanitize_text_field( wp_unslash( $_POST[ $day ] ) );
         }
-        if (isset($_POST[$year]) ) {
-            $data[$field['taxonomy']] .= ' ' . $_POST[$year];
+        if ( isset( $_POST[ $year ] ) ) {
+            $data[ $field['taxonomy'] ] .= ' ' . sanitize_text_field( wp_unslash( $_POST[ $year ] ) );
         }
-        $date = DateTime::createFromFormat('F j Y', $data[$field['taxonomy']]);
-        if ($date ) {
-            $this->Callbacks->date($post_id, $field['taxonomy'], $multiples = $field['multiples'], $data);
+        $date = DateTime::createFromFormat( 'F j Y', $data[ $field['taxonomy'] ] );
+        if ( $date ) {
+            $this->Callbacks->date( $post_id, $field['taxonomy'], $field['multiples'], $data );
         }
     }
 
@@ -290,52 +288,52 @@ class Models
      * @return array A version of $_POST with cleaned data ready to be sent to a save method
      *               like $this->save()
      */
-    public function validate( $post_ID, $field ) 
+    public function validate( $post_ID, $field )
     {
-        // $data = array_intersect_key($_POST, $this->fields);
-        $key = $field['meta_key'];
-        $value = $_POST[$key];
-        // error_log('Key is '. $key . ' value is ' . $value);
-        if (array_key_exists('do_not_validate', $field) ) {
+        $postvalues = null;
+        $key        = $field['meta_key'];
+        // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- sanitized per field type below.
+        $value      = isset( $_POST[ $key ] ) ? $_POST[ $key ] : null;
+
+        if ( array_key_exists( 'do_not_validate', $field ) ) {
             return;
         }
-        if (! array_key_exists('type', $field) ) {
+        if ( ! array_key_exists( 'type', $field ) ) {
             return;
         }
 
         /* if this field is a taxonomy select, date, link or select field, we
            send it out to another validator
         */
-        if ($field['type'] == 'taxonomyselect') {
-            $this->validate_taxonomyselect($field, $post_ID);
-        } elseif (in_array($field['type'], $this->selects) ) {
-            $this->validate_select($field, $post_ID);
-        } elseif ($field['type'] === 'date' ) {
-            $this->validate_date($field, $post_ID);
-        } elseif ($field['type'] === 'link' ) {
-            $this->validate_link($field, $post_ID);
+        if ( 'taxonomyselect' === $field['type'] ) {
+            $this->validate_taxonomyselect( $field, $post_ID );
+        } elseif ( in_array( $field['type'], $this->selects, true ) ) {
+            $this->validate_select( $field, $post_ID );
+        } elseif ( 'date' === $field['type'] ) {
+            $this->validate_date( $field, $post_ID );
+        } elseif ( 'link' === $field['type'] ) {
+            $this->validate_link( $field, $post_ID );
         } else {
-            /* 
+            /*
             For most field types we just need to make sure we have the data
             we expect from the form and sanitize them before sending them to
-            save
+            save.
             */
             $key = $field['slug'];
-            if ($field['type'] === 'number' ) {
-                if (is_numeric($value) ) {
-                    // if we're expecting a number, make sure we get a number
-                    $postvalues = intval($value); 
+            if ( 'number' === $field['type'] ) {
+                if ( is_numeric( $value ) ) {
+                    // If we're expecting a number, make sure we get a number.
+                    $postvalues = intval( $value );
                 }
-            } elseif ($field['type'] === 'url' && isset($value) ) {
-                // if we're expecting a url, make sure we get a url
-                $postvalues = esc_url_raw($value); 
-            } elseif ($field['type'] === 'email' ) {
-                // if we're expecting an email, make sure we get an email
-                $postvalues = sanitize_email($value); 
-            } elseif (! empty($value) && ! is_array($value)) {
-                // make sure whatever we get for anything else is a string
-                $postvalues = (string)$value;
-                // error_log('Post data ' . $value . '  cleaned for ' . $key);
+            } elseif ( 'url' === $field['type'] && isset( $value ) ) {
+                // If we're expecting a url, make sure we get a url.
+                $postvalues = esc_url_raw( wp_unslash( $value ) );
+            } elseif ( 'email' === $field['type'] ) {
+                // If we're expecting an email, make sure we get an email.
+                $postvalues = sanitize_email( wp_unslash( $value ) );
+            } elseif ( ! empty( $value ) && ! is_array( $value ) ) {
+                // Make sure whatever we get for anything else is a string.
+                $postvalues = sanitize_text_field( wp_unslash( $value ) );
             } else {
                 $postvalues = null;
             }
@@ -351,26 +349,25 @@ class Models
      *                           data to be saved
      * @return nothing           Either deletes or updates post meta or returns empty
      */
-    public function save( $post_ID, $postvalues ) 
+    public function save( $post_ID, $postvalues )
     {
-        // Do nothing if we're auto saving
-        if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE ) { 
+        // Do nothing if we're auto saving.
+        if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) {
             return;
         }
 
-        if (empty($postvalues) ) {
-            // if we're passed an empty array, don't do anything
+        if ( empty( $postvalues ) ) {
+            // If we're passed an empty array, don't do anything.
             return;
         }
 
-        // save post data for any fields that sent them
+        // Save post data for any fields that sent them.
         foreach ( $postvalues as $key => $value ) {
-            error_log("Key is {$key} and value is {$value}.");
-            $existing = get_post_meta($post_ID, $key, $single = true);
-            if ($value == null && isset($existing) ) {
-                delete_post_meta($post_ID, $key);
-            } elseif (isset($value) ) {
-                update_post_meta($post_ID, $meta_key = $key, $meta_value = $value);
+            $existing = get_post_meta( $post_ID, $key, true );
+            if ( null === $value && isset( $existing ) ) {
+                delete_post_meta( $post_ID, $key );
+            } elseif ( isset( $value ) ) {
+                update_post_meta( $post_ID, $key, $value );
             } else {
                 return;
             }
@@ -383,15 +380,22 @@ class Models
      * @param  int $post_ID The id of the object we're saving
      * @return void
      */
-    public function validate_and_save( $post_ID ) 
+    public function validate_and_save( $post_ID )
     {
+        if ( ! isset( $_POST['_wpnonce'] ) || ! wp_verify_nonce( sanitize_key( $_POST['_wpnonce'] ), 'cms_toolkit_save_' . $post_ID ) ) {
+            return;
+        }
+
+        if ( ! current_user_can( 'edit_post', $post_ID ) ) {
+            return;
+        }
+
         $validate = array();
         foreach ( $this->fields as $field ) {
             if ($field['type'] == 'fieldset') {
                 foreach ( $field['fields'] as $f ) {
                     $f['meta_key'] = $field['meta_key'] . '_' . $f['meta_key'];
                     $value = $this->validate($post_ID, $f);
-                    error_log('Saving ' . $value. ' to ' . $f['meta_key']);
                     $validate[$f['meta_key']] = $value;
                 }
             } else {
@@ -407,9 +411,12 @@ class Models
      *
      * @since v1.0
      **/
-    public function date_meta_box( $taxonomy, $tax_nice_name, $mutliples = false ) 
+    public function date_meta_box( $taxonomy, $tax_nice_name, $mutliples = false )
     {
-        $error = new $this->error('moved', __('This function has moved to the \CFPB\Utils\MetaBox\HTML namespace. Look for it there as simply date()!'));
-        echo $error->get_error_message('moved');
+        _doing_it_wrong(
+            __FUNCTION__,
+            'This function has moved to the \CFPB\Utils\MetaBox\HTML namespace. Look for it there as simply date()!',
+            '1.1'
+        );
     }
 }

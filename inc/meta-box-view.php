@@ -29,7 +29,7 @@ class View
     public $elements;
     private $HTML;
 
-    function __construct() 
+    public function __construct()
     {
         $this->HTML     = new HTML();
         $this->elements = array_merge(
@@ -66,7 +66,6 @@ class View
             if ($field['type'] == 'fieldset' ) {
                 // if our field is a fieldset, process defaults for each field that
                 // in the group.
-                $fields = $field['slug']['fields'];
                 $i = 0;
                 foreach ($field['fields'] as $f) {
                     $field['fields'][$i] = $this->assign_defaults($f);
@@ -100,7 +99,7 @@ class View
             $field['include'] = $this->default_options($field);
             unset($field['params']);
         }
-        if ($field['type'] == 'mutliselect' ) {
+        if ($field['type'] == 'multiselect' ) {
             $field['multiselect'] = true;
         } else {
             $field['multiselect'] = false;
@@ -170,10 +169,10 @@ class View
         $init_num = $field['params']['init_num_forms'] ? $field['params']['init_num_forms'] : 1;
         $max_num  = isset($field['params']['max_num_forms']) ? $field['params']['max_num_forms'] : $field['params']['count'];
         $existing = array();
-        $key = $field['meta_key'];
-        for ($i=0; $i < $max_num; $i++) { 
-            global $post;
-            $meta = get_post_meta($post->ID, $key = "{$key}_{$i}", $single = false);
+        $key     = $field['meta_key'];
+        $post_id = get_the_ID();
+        for ( $i = 0; $i < $max_num; $i++ ) {
+            $meta = get_post_meta( $post_id, "{$key}_{$i}", false );
             if (isset($meta) ) {
                 array_push($existing, $meta);
             }
